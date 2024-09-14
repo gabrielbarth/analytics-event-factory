@@ -1,0 +1,24 @@
+{
+  "name": "analytics-event-factory",
+  "description": "Analytics Event Factory",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "event",
+    "events",
+    "event emitter",
+    "event factory",
+    "event with metadata",
+    "analytics event factory",
+    "amplitude analytics events",
+    "firebase analytics events",
+    "user events",
+    "custom user events",
+    "users event with metadata"
+  ],
+  "author": "Gabriel Barth (dev@gabrielbarth.com)",
+  "license": "ISC"
+}
