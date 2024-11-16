@@ -8,6 +8,6 @@ type ActionHandler = (eventMetadata: EventMetadata) => void;
 
 export type EventHandler = {
   [key in Element]: {
-    [action in Action]?: ActionHandler;
+    [action in Action]: ActionHandler;
   };
 };
