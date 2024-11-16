@@ -2,7 +2,10 @@
   "compilerOptions": {
     "outDir": "dist",
     "target": "ES5",
-    "module": "CommonJS"
+    "module": "CommonJS",
+    "declaration": true,
+    "declarationMap": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/examples"]
 }
