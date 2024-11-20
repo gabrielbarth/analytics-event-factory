@@ -1,7 +1,7 @@
 {
-  "name": "analytics-event-factory",
+  "name": "@gabrielbarth/analytics-event-factory",
   "description": "Analytics Event Factory",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -36,5 +36,8 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gabrielbarth/analytics-event-factory.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
   }
 }
