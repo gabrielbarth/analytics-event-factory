@@ -16,6 +16,7 @@ export function eventCreator({
     ? `${options.page.currentPage.trim()}.`
     : "";
   const showPageOnMetadata = options.page.showOnMetadata;
+  const showElementIdOnLabel = options.element.showElementIdOnLabel;
 
   // iterate over each element
   eventElements.forEach((element) => {
@@ -25,8 +26,13 @@ export function eventCreator({
     eventActions.forEach((action) => {
       // define an action handler that receives event metadata
       handlers[element][action] = (eventMetadata: EventMetadata) => {
+        const isShowElementId =
+          eventMetadata?.elementId && showElementIdOnLabel;
+        const elementId = isShowElementId
+          ? `.${eventMetadata.elementId.trim()}`
+          : "";
         callback({
-          label: `${page}${element}.${action}`,
+          label: `${page}${element}.${action}${elementId}`,
           metadata: {
             ...eventMetadata,
             ...(showPageOnMetadata ? { page: page.slice(0, -1) } : {}),
