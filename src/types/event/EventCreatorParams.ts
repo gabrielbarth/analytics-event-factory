@@ -27,6 +27,7 @@ type EventCreatorParamsOptions = {
     stringCase?: StringCase;
     stringFormat?: StringFormat;
     showOnMetadata?: boolean;
+    showElementIdOnLabel?: boolean;
   };
 };
 
