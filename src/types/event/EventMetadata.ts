@@ -1,1 +1,1 @@
-export type EventMetadata = unknown;
+export type EventMetadata = Object;
