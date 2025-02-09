@@ -12,11 +12,11 @@ export function eventCreator({
 }: EventCreatorParams): EventHandler {
   const handlers: EventHandler = {} as EventHandler;
 
-  const page = options.page.showOnLabel
-    ? `${options.page.currentPage.trim()}.`
+  const page = options?.page?.showOnLabel
+    ? `${options?.page?.currentPage?.trim()}.`
     : "";
-  const showPageOnMetadata = options.page.showOnMetadata;
-  const showElementIdOnLabel = options.element.showElementIdOnLabel;
+  const showPageOnMetadata = options?.page?.showOnMetadata;
+  const showElementIdOnLabel = options?.element?.showElementIdOnLabel;
 
   // iterate over each element
   eventElements.forEach((element) => {
@@ -29,7 +29,7 @@ export function eventCreator({
         const isShowElementId =
           eventMetadata?.elementId && showElementIdOnLabel;
         const elementId = isShowElementId
-          ? `.${eventMetadata.elementId.trim()}`
+          ? `.${eventMetadata?.elementId?.trim()}`
           : "";
         callback({
           label: `${page}${element}.${action}${elementId}`,
