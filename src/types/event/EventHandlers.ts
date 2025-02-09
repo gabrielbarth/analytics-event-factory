@@ -4,7 +4,7 @@ import { EventMetadata } from "./EventMetadata";
 
 type Element = (typeof eventElements)[number];
 type Action = (typeof eventActions)[number];
-type ActionHandler = (eventMetadata: EventMetadata) => void;
+type ActionHandler = (eventMetadata?: EventMetadata) => void;
 
 export type EventHandler = {
   [key in Element]: {
