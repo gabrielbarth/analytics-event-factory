@@ -1,31 +1,29 @@
-type StringFormat =
+export type StringFormat =
   | "camelCase"
-  | "pascalCase"
-  | "snakeCase"
+  | "PascalCase"
+  | "snake_case"
+  | "kebab-case"
   | "dotCase"
-  | "kebabCase"
   | "noCase";
 
-type StringCase = "lowercase" | "uppercase";
+export type StringCase = "lowercase" | "uppercase" | "capitalize";
 
 type EventCreatorParamsOptions = {
-  page?: {
-    currentPage?: string;
+  labelOptions?: {
     stringCase?: StringCase;
     stringFormat?: StringFormat;
+  };
+  page?: {
+    currentPage?: string;
     showOnLabel?: boolean;
     showOnMetadata?: boolean;
   };
   action?: {
     possibleActions?: string[];
-    stringCase?: StringCase;
-    stringFormat?: StringFormat;
     showOnMetadata?: boolean;
   };
   element?: {
     possibleElements?: string[];
-    stringCase?: StringCase;
-    stringFormat?: StringFormat;
     showOnMetadata?: boolean;
     showElementIdOnLabel?: boolean;
   };
