@@ -6,5 +6,12 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.recommended,
-  { ignores: ["**/dist/**"] }
+  {
+    ignores: ["**/dist/**"],
+    rules: {
+      "no-console": "off",
+      eqeqeq: ["error", "always"],
+      semi: ["error", "always"],
+    },
+  }
 );

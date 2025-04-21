@@ -12,7 +12,7 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "build": "tsc",
-    "lint": "eslint . --ext .ts,.js"
+    "lint": "eslint . --ext .ts,.js --ignore-pattern dist/"
   },
   "keywords": [
     "event",
