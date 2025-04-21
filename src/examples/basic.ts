@@ -11,7 +11,9 @@ function logEvent(eventMetadata: unknown): unknown {
 }
 
 // usage example
-const eventHandler = eventCreator(logEvent);
+const eventHandler = eventCreator({
+  callback: logEvent,
+});
 
 eventHandler.button.click({
   id: "btn-1",
