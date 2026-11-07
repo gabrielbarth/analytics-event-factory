@@ -1,18 +1,21 @@
 export type StringFormat =
-  | "camelCase"
-  | "PascalCase"
-  | "snake_case"
-  | "kebab-case"
-  | "dotCase"
-  | "noCase";
+  "camelCase" | "PascalCase" | "snake_case" | "kebab-case" | "dot.case" | "raw";
 
 export type StringCase = "lowercase" | "uppercase" | "capitalize";
 
+// camelCase and PascalCase already define the case of each word
+export type LabelOptions =
+  | {
+      stringFormat: "camelCase" | "PascalCase";
+      stringCase?: never;
+    }
+  | {
+      stringFormat?: Exclude<StringFormat, "camelCase" | "PascalCase">;
+      stringCase?: StringCase;
+    };
+
 type EventCreatorParamsOptions = {
-  labelOptions?: {
-    stringCase?: StringCase;
-    stringFormat?: StringFormat;
-  };
+  labelOptions?: LabelOptions;
   page?: {
     currentPage?: string;
     showOnLabel?: boolean;

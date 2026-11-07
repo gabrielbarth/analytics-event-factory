@@ -102,14 +102,14 @@ describe("eventCreator", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("should format the label correctly with stringFormat set to 'noCase'", () => {
+  it("should format the label correctly with stringFormat set to 'raw'", () => {
     const params: EventCreatorParams = {
       ...defaultParams,
       options: {
         ...defaultParams.options,
         labelOptions: {
           stringCase: "lowercase",
-          stringFormat: "noCase",
+          stringFormat: "raw",
         },
       },
     };
@@ -127,6 +127,81 @@ describe("eventCreator", () => {
         element: "link",
         action: "click",
       },
+    });
+  });
+  it("should not start the label with a separator when the page is not on the label", () => {
+    const handlers = eventCreator({
+      callback: mockCallback,
+      options: { labelOptions: { stringFormat: "snake_case" } },
+    });
+
+    handlers.button.click();
+
+    expect(mockCallback).toHaveBeenCalledWith({
+      label: "button_click",
+      metadata: {},
+    });
+  });
+
+  it("should keep hyphenated actions and element ids as separate words", () => {
+    const handlers = eventCreator({
+      callback: mockCallback,
+      options: {
+        element: { showElementIdOnLabel: true },
+        labelOptions: { stringFormat: "camelCase" },
+      },
+    });
+
+    handlers.list["pull-to-refresh"]({ elementId: "feed-1" });
+
+    expect(mockCallback).toHaveBeenCalledWith({
+      label: "listPullToRefreshFeed1",
+      metadata: { elementId: "feed-1" },
+    });
+  });
+
+  it("should leave the page out of the label when currentPage is missing", () => {
+    const handlers = eventCreator({
+      callback: mockCallback,
+      options: {
+        page: { showOnLabel: true, showOnMetadata: true },
+        labelOptions: { stringFormat: "snake_case" },
+      },
+    });
+
+    handlers.page.view();
+
+    expect(mockCallback).toHaveBeenCalledWith({
+      label: "page_view",
+      metadata: {},
+    });
+  });
+
+  it("should add the page to the metadata even when it is not on the label", () => {
+    const handlers = eventCreator({
+      callback: mockCallback,
+      options: { page: { currentPage: "Início", showOnMetadata: true } },
+    });
+
+    handlers.page.view();
+
+    expect(mockCallback).toHaveBeenCalledWith({
+      label: "page view",
+      metadata: { page: "Início" },
+    });
+  });
+
+  it("should not add the element id to the label when the option is off", () => {
+    const handlers = eventCreator({
+      callback: mockCallback,
+      options: { labelOptions: { stringFormat: "snake_case" } },
+    });
+
+    handlers.button.click({ elementId: "btn-1" });
+
+    expect(mockCallback).toHaveBeenCalledWith({
+      label: "button_click",
+      metadata: { elementId: "btn-1" },
     });
   });
 });
