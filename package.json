@@ -1,6 +1,6 @@
 {
   "name": "analytics-event-factory",
-  "description": "Analytics Event Factory",
+  "description": "Typed factory to standardize analytics event names and metadata",
   "version": "2.0.0",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -33,6 +33,7 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
+    "analytics",
     "event",
     "events",
     "event emitter",
@@ -46,7 +47,7 @@
     "users event with metadata"
   ],
   "author": "Gabriel Barth (dev@gabrielbarth.com)",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "@eslint/js": "^9.25.1",
