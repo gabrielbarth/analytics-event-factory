@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.1.0
+
+### Added
+
+- `schema` option for `eventCreator`, built with `defineEvents` and `field`. Each event declares its own fields. Only the events in the schema get handlers, and other fields or values are type errors.
+- The schema is also checked at runtime. Fields outside it and values it does not accept are removed before the callback, and `onInvalid` receives what was removed, without the values.
+- `page.possiblePages`, with a schema: any other page is sent as `"other"`.
+- Exported types: `EventSchema`, `EventFields`, `Field`, `FieldKind`, `SchemaMetadata`, `SchemaActionHandler`, `SchemaEventHandler`, `SchemaEventCreatorParams`, `SchemaEventCreatorOptions` and `InvalidEventIssue`.
+
+Nothing changes for code that does not pass a schema.
+
 ## 3.0.0
 
 ### Breaking changes

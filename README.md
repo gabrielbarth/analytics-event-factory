@@ -5,6 +5,7 @@
 - No dependencies
 - Ships ESM and CommonJS builds with TypeScript types
 - Handlers are typed from your own elements and actions
+- Optional event schema: typed fields per event, also checked at runtime
 - Analytics errors never break the screen that fired the event
 
 ## 🚀 Installation
@@ -107,6 +108,60 @@ const events = eventCreator({
 events.tab.swipe(); // ok
 events.button.navigate(); // type error: "navigate" is not one of the actions
 ```
+
+## 🗂️ Event schema
+
+Without a schema, every element gets every action and the metadata takes any field. A schema lists each event with its own fields instead. Only those events get handlers, the type checker rejects other fields and values, and the same schema is checked at runtime, so a value that slips past the types never reaches your analytics tool.
+
+```ts
+import { defineEvents, eventCreator, field } from "analytics-event-factory";
+
+const schema = defineEvents({
+  category: { corrected: { scope: field.oneOf("only_this", "always") } },
+  purchase: {
+    started: { plan: field.oneOf("individual", "couple"), banks: field.number() },
+  },
+  bank: { selected: { connector: field.number().optional() } },
+  first_import: { seen: {} },
+});
+
+const events = eventCreator({
+  schema,
+  callback: (event) => analytics.logEvent(event.label, event.metadata),
+  options: { labelOptions: { stringFormat: "snake_case" } },
+});
+
+events.category.corrected({ scope: "always" }); // category_corrected
+events.first_import.seen(); // first_import_seen
+
+events.category.corrected({ scope: "all" }); // type error: not one of the values
+events.category.corrected({ scope: "always", total: 10 }); // type error: unknown field
+events.purchase.started(); // type error: plan and banks are required
+events.purchase.corrected(); // type error: not in the schema
+```
+
+| Field                    | Accepts                                 |
+| ------------------------ | --------------------------------------- |
+| `field.string()`         | any string                              |
+| `field.number()`         | finite numbers                          |
+| `field.boolean()`        | `true` or `false`                       |
+| `field.oneOf(...values)` | only the listed strings or numbers      |
+| `.optional()`            | the same, and the field can be left out |
+
+At runtime, before the callback, fields that are not in the schema and values a field does not accept are removed. The rest of the event is still sent. What was removed, and any required field that is missing, goes to `onInvalid`, or to `console.warn` by default:
+
+```ts
+const events = eventCreator({
+  schema,
+  callback: sendToAnalytics,
+  onInvalid: (issues, event) =>
+    Sentry.captureMessage(`invalid event ${event.label}`, { extra: { issues } }),
+});
+```
+
+Each issue names the field (`{ type: "invalid-value", field: "scope" }`) and never carries the rejected value, so reporting it cannot leak what was removed.
+
+With a schema, `page.possiblePages` lists the pages you expect. Any other page, such as a route with an id in it, is sent as `"other"` and reported as `{ type: "unknown-page" }`. The elements and actions come from the schema, so `possibleElements` and `possibleActions` are not used.
 
 ## 🧭 Following navigation
 
