@@ -1,11 +1,18 @@
 import { eventCreator } from "./index";
-import { EventHandler } from "../../types/event/EventHandlers";
-import { EventCreatorParams } from "../../types/event/EventCreatorParams";
+import {
+  EventCreatorOptions,
+  EventCreatorParams,
+} from "../../types/event/EventCreatorParams";
+import { eventActions } from "../../utils/constants/eventActions";
+import { eventElements } from "../../utils/constants/eventElements";
 
 describe("eventCreator", () => {
   const mockCallback = jest.fn();
 
-  const defaultParams: EventCreatorParams = {
+  const defaultParams: EventCreatorParams<
+    "button" | "link",
+    "click" | "scroll"
+  > = {
     callback: mockCallback,
     options: {
       page: {
@@ -34,7 +41,7 @@ describe("eventCreator", () => {
   });
 
   it("should create handlers for all elements and actions", () => {
-    const handlers: EventHandler = eventCreator(defaultParams);
+    const handlers = eventCreator(defaultParams);
 
     expect(handlers).toHaveProperty("button");
     expect(handlers).toHaveProperty("link");
@@ -45,7 +52,7 @@ describe("eventCreator", () => {
   });
 
   it("should call the callback with the correct label and metadata", () => {
-    const handlers: EventHandler = eventCreator(defaultParams);
+    const handlers = eventCreator(defaultParams);
 
     const eventMetadata = { elementId: "123", customData: "test" };
     handlers.button.click(eventMetadata);
@@ -73,7 +80,7 @@ describe("eventCreator", () => {
       },
     };
 
-    const handlers: EventHandler = eventCreator(params);
+    const handlers = eventCreator(params);
 
     const eventMetadata = { elementId: "789" };
     handlers.button.click(eventMetadata);
@@ -89,32 +96,65 @@ describe("eventCreator", () => {
   });
 
   it("should handle default actions and elements if none are provided", () => {
-    const params = {
-      callback: mockCallback,
-      options: {},
-    };
+    const handlers = eventCreator({ callback: mockCallback });
 
-    const handlers: EventHandler = eventCreator(params);
-
-    expect(Object.keys(handlers).length).toBeGreaterThan(0);
-    expect(
-      Object.keys(handlers[Object.keys(handlers)[0]]).length
-    ).toBeGreaterThan(0);
+    expect(Object.keys(handlers)).toEqual([...eventElements]);
+    expect(Object.keys(handlers.button)).toEqual([...eventActions]);
   });
 
-  it("should format the label correctly with stringFormat set to 'noCase'", () => {
-    const params: EventCreatorParams = {
+  it("should type the handlers from custom elements and actions", () => {
+    const handlers = eventCreator({
+      callback: mockCallback,
+      options: {
+        element: { possibleElements: ["tab"] },
+        action: { possibleActions: ["swipe"] },
+      },
+    });
+
+    handlers.tab.swipe();
+
+    // @ts-expect-error button is not one of the possible elements
+    expect(handlers.button).toBeUndefined();
+    expect(mockCallback).toHaveBeenCalledWith({
+      label: "tab swipe",
+      metadata: {},
+    });
+  });
+
+  it("should pass a typed event to the callback", () => {
+    const labels: string[] = [];
+    const handlers = eventCreator({
+      callback: (event) => labels.push(event.label),
+    });
+
+    handlers.button.click();
+
+    expect(labels).toEqual(["button click"]);
+  });
+
+  it("should not accept stringCase with camelCase or PascalCase", () => {
+    // checked by the type checker (npm run typecheck)
+    const options: EventCreatorOptions = {
+      // @ts-expect-error camelCase already defines the case of each word
+      labelOptions: { stringFormat: "camelCase", stringCase: "uppercase" },
+    };
+
+    expect(options).toBeDefined();
+  });
+
+  it("should format the label correctly with stringFormat set to 'raw'", () => {
+    const params: typeof defaultParams = {
       ...defaultParams,
       options: {
         ...defaultParams.options,
         labelOptions: {
           stringCase: "lowercase",
-          stringFormat: "noCase",
+          stringFormat: "raw",
         },
       },
     };
 
-    const handlers: EventHandler = eventCreator(params);
+    const handlers = eventCreator(params);
 
     const eventMetadata = { elementId: "456" };
     handlers.link.click(eventMetadata);
@@ -127,6 +167,185 @@ describe("eventCreator", () => {
         element: "link",
         action: "click",
       },
+    });
+  });
+  it("should not start the label with a separator when the page is not on the label", () => {
+    const handlers = eventCreator({
+      callback: mockCallback,
+      options: { labelOptions: { stringFormat: "snake_case" } },
+    });
+
+    handlers.button.click();
+
+    expect(mockCallback).toHaveBeenCalledWith({
+      label: "button_click",
+      metadata: {},
+    });
+  });
+
+  it("should keep hyphenated actions and element ids as separate words", () => {
+    const handlers = eventCreator({
+      callback: mockCallback,
+      options: {
+        element: { showElementIdOnLabel: true },
+        labelOptions: { stringFormat: "camelCase" },
+      },
+    });
+
+    handlers.list["pull-to-refresh"]({ elementId: "feed-1" });
+
+    expect(mockCallback).toHaveBeenCalledWith({
+      label: "listPullToRefreshFeed1",
+      metadata: { elementId: "feed-1" },
+    });
+  });
+
+  it("should leave the page out of the label when currentPage is missing", () => {
+    const handlers = eventCreator({
+      callback: mockCallback,
+      options: {
+        page: { showOnLabel: true, showOnMetadata: true },
+        labelOptions: { stringFormat: "snake_case" },
+      },
+    });
+
+    handlers.page.view();
+
+    expect(mockCallback).toHaveBeenCalledWith({
+      label: "page_view",
+      metadata: {},
+    });
+  });
+
+  it("should add the page to the metadata even when it is not on the label", () => {
+    const handlers = eventCreator({
+      callback: mockCallback,
+      options: { page: { currentPage: "Início", showOnMetadata: true } },
+    });
+
+    handlers.page.view();
+
+    expect(mockCallback).toHaveBeenCalledWith({
+      label: "page view",
+      metadata: { page: "Início" },
+    });
+  });
+
+  it("should not add the element id to the label when the option is off", () => {
+    const handlers = eventCreator({
+      callback: mockCallback,
+      options: { labelOptions: { stringFormat: "snake_case" } },
+    });
+
+    handlers.button.click({ elementId: "btn-1" });
+
+    expect(mockCallback).toHaveBeenCalledWith({
+      label: "button_click",
+      metadata: { elementId: "btn-1" },
+    });
+  });
+
+  it("should read currentPage on every event when it is a function", () => {
+    let currentRoute = "home";
+    const handlers = eventCreator({
+      callback: mockCallback,
+      options: {
+        page: {
+          currentPage: () => currentRoute,
+          showOnLabel: true,
+          showOnMetadata: true,
+        },
+        labelOptions: { stringFormat: "snake_case" },
+      },
+    });
+
+    handlers.button.click();
+    currentRoute = "checkout";
+    handlers.button.click();
+
+    expect(mockCallback).toHaveBeenNthCalledWith(1, {
+      label: "home_button_click",
+      metadata: { page: "home" },
+    });
+    expect(mockCallback).toHaveBeenNthCalledWith(2, {
+      label: "checkout_button_click",
+      metadata: { page: "checkout" },
+    });
+  });
+
+  describe("errors", () => {
+    const error = new Error("SDK offline");
+    const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
+
+    it("should send callback errors to onError instead of throwing", () => {
+      const onError = jest.fn();
+      const handlers = eventCreator({
+        callback: () => {
+          throw error;
+        },
+        onError,
+      });
+
+      expect(() => handlers.button.click()).not.toThrow();
+      expect(onError).toHaveBeenCalledWith(error, {
+        label: "button click",
+        metadata: {},
+      });
+    });
+
+    it("should send rejected promises to onError", async () => {
+      const onError = jest.fn();
+      const handlers = eventCreator({
+        callback: () => Promise.reject(error),
+        onError,
+      });
+
+      handlers.button.click();
+      await flushPromises();
+
+      expect(onError).toHaveBeenCalledWith(error, {
+        label: "button click",
+        metadata: {},
+      });
+    });
+
+    it("should send errors from currentPage to onError without an event", () => {
+      const onError = jest.fn();
+      const handlers = eventCreator({
+        callback: mockCallback,
+        onError,
+        options: {
+          page: {
+            currentPage: () => {
+              throw error;
+            },
+          },
+        },
+      });
+
+      handlers.button.click();
+
+      expect(mockCallback).not.toHaveBeenCalled();
+      expect(onError).toHaveBeenCalledWith(error, undefined);
+    });
+
+    it("should log the error when onError is not given", () => {
+      const consoleError = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => undefined);
+      const handlers = eventCreator({
+        callback: () => {
+          throw error;
+        },
+      });
+
+      handlers.button.click();
+
+      expect(consoleError).toHaveBeenCalledWith(
+        "[analytics-event-factory] failed to send event:",
+        error
+      );
+      consoleError.mockRestore();
     });
   });
 });

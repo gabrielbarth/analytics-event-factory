@@ -1,13 +1,14 @@
-import { eventActions } from "../../utils/constants/eventActions";
-import { eventElements } from "../../utils/constants/eventElements";
+import { DefaultEventAction } from "./EventAction";
+import { DefaultEventElement } from "./EventElement";
 import { EventMetadata } from "./EventMetadata";
 
-type Element = (typeof eventElements)[number];
-type Action = (typeof eventActions)[number];
-type ActionHandler = (eventMetadata?: EventMetadata) => void;
+export type ActionHandler = (eventMetadata?: EventMetadata) => void;
 
-export type EventHandler = {
-  [key in Element]: {
+export type EventHandler<
+  Element extends string = DefaultEventElement,
+  Action extends string = DefaultEventAction,
+> = {
+  [element in Element]: {
     [action in Action]: ActionHandler;
   };
 };

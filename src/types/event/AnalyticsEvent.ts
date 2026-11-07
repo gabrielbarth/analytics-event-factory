@@ -1,6 +1,6 @@
 import { EventMetadata } from "./EventMetadata";
 
-export type EventReturn = {
+export type AnalyticsEvent = {
   label: string;
-  metadata?: EventMetadata;
+  metadata: EventMetadata;
 };
