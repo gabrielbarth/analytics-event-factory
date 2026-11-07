@@ -1,6 +1,6 @@
-import { EventAction } from "../../types/event/EventAction";
+import { DefaultEventAction } from "../../types/event/EventAction";
 import { EventCreatorParams } from "../../types/event/EventCreatorParams";
-import { EventElement } from "../../types/event/EventElement";
+import { DefaultEventElement } from "../../types/event/EventElement";
 import { EventHandler } from "../../types/event/EventHandlers";
 import { EventMetadata } from "../../types/event/EventMetadata";
 import { eventActions as defaultEventActions } from "../../utils/constants/eventActions";
@@ -8,11 +8,14 @@ import { eventElements as defaultEventElements } from "../../utils/constants/eve
 import { formatLabel } from "../../utils/helpers/formatLabel";
 
 // function to create an object structure [element][action] and returns callback
-export function eventCreator({
+export function eventCreator<
+  Element extends string = DefaultEventElement,
+  Action extends string = DefaultEventAction,
+>({
   callback,
   options,
-}: EventCreatorParams): EventHandler {
-  const handlers: EventHandler = {} as EventHandler;
+}: EventCreatorParams<Element, Action>): EventHandler<Element, Action> {
+  const handlers = {} as EventHandler<Element, Action>;
 
   const page = options?.page?.currentPage?.trim() || undefined;
   const showPageOnLabel = options?.page?.showOnLabel;
@@ -20,18 +23,19 @@ export function eventCreator({
   const showElementIdOnLabel = options?.element?.showElementIdOnLabel;
   const labelOptions = options?.labelOptions;
 
-  const eventElements =
-    options?.element?.possibleElements || defaultEventElements;
-  const eventActions = options?.action?.possibleActions || defaultEventActions;
+  const eventElements = (options?.element?.possibleElements ||
+    defaultEventElements) as readonly Element[];
+  const eventActions = (options?.action?.possibleActions ||
+    defaultEventActions) as readonly Action[];
 
   // iterate over each element
-  eventElements.forEach((element: EventElement) => {
-    handlers[element] = {} as EventHandler[EventElement];
+  eventElements.forEach((element) => {
+    handlers[element] = {} as EventHandler<Element, Action>[Element];
 
     // iterate over each action
-    eventActions.forEach((action: EventAction) => {
+    eventActions.forEach((action) => {
       // define an action handler that receives event metadata
-      handlers[element][action] = (eventMetadata: EventMetadata) => {
+      handlers[element][action] = (eventMetadata?: EventMetadata) => {
         const elementId = showElementIdOnLabel
           ? String(eventMetadata?.elementId ?? "")
           : undefined;

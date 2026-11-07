@@ -1,6 +1,3 @@
-export enum EventAction {
-  Click = "click",
-  View = "view",
-  Navigate = "navigate",
-  PullToRefresh = "pull-to-refresh",
-}
+import { eventActions } from "../../utils/constants/eventActions";
+
+export type DefaultEventAction = (typeof eventActions)[number];

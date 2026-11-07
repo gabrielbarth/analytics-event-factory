@@ -1,3 +1,7 @@
+import { AnalyticsEvent } from "./AnalyticsEvent";
+import { DefaultEventAction } from "./EventAction";
+import { DefaultEventElement } from "./EventElement";
+
 export type StringFormat =
   "camelCase" | "PascalCase" | "snake_case" | "kebab-case" | "dot.case" | "raw";
 
@@ -14,7 +18,10 @@ export type LabelOptions =
       stringCase?: StringCase;
     };
 
-type EventCreatorParamsOptions = {
+export type EventCreatorOptions<
+  Element extends string = DefaultEventElement,
+  Action extends string = DefaultEventAction,
+> = {
   labelOptions?: LabelOptions;
   page?: {
     currentPage?: string;
@@ -22,17 +29,20 @@ type EventCreatorParamsOptions = {
     showOnMetadata?: boolean;
   };
   action?: {
-    possibleActions?: string[];
+    possibleActions?: readonly Action[];
     showOnMetadata?: boolean;
   };
   element?: {
-    possibleElements?: string[];
+    possibleElements?: readonly Element[];
     showOnMetadata?: boolean;
     showElementIdOnLabel?: boolean;
   };
 };
 
-export interface EventCreatorParams {
-  callback: (cbEventMetadata: unknown) => unknown;
-  options?: EventCreatorParamsOptions;
+export interface EventCreatorParams<
+  Element extends string = DefaultEventElement,
+  Action extends string = DefaultEventAction,
+> {
+  callback: (event: AnalyticsEvent) => unknown;
+  options?: EventCreatorOptions<Element, Action>;
 }

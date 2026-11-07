@@ -1,11 +1,18 @@
 import { eventCreator } from "./index";
-import { EventHandler } from "../../types/event/EventHandlers";
-import { EventCreatorParams } from "../../types/event/EventCreatorParams";
+import {
+  EventCreatorOptions,
+  EventCreatorParams,
+} from "../../types/event/EventCreatorParams";
+import { eventActions } from "../../utils/constants/eventActions";
+import { eventElements } from "../../utils/constants/eventElements";
 
 describe("eventCreator", () => {
   const mockCallback = jest.fn();
 
-  const defaultParams: EventCreatorParams = {
+  const defaultParams: EventCreatorParams<
+    "button" | "link",
+    "click" | "scroll"
+  > = {
     callback: mockCallback,
     options: {
       page: {
@@ -34,7 +41,7 @@ describe("eventCreator", () => {
   });
 
   it("should create handlers for all elements and actions", () => {
-    const handlers: EventHandler = eventCreator(defaultParams);
+    const handlers = eventCreator(defaultParams);
 
     expect(handlers).toHaveProperty("button");
     expect(handlers).toHaveProperty("link");
@@ -45,7 +52,7 @@ describe("eventCreator", () => {
   });
 
   it("should call the callback with the correct label and metadata", () => {
-    const handlers: EventHandler = eventCreator(defaultParams);
+    const handlers = eventCreator(defaultParams);
 
     const eventMetadata = { elementId: "123", customData: "test" };
     handlers.button.click(eventMetadata);
@@ -73,7 +80,7 @@ describe("eventCreator", () => {
       },
     };
 
-    const handlers: EventHandler = eventCreator(params);
+    const handlers = eventCreator(params);
 
     const eventMetadata = { elementId: "789" };
     handlers.button.click(eventMetadata);
@@ -89,21 +96,54 @@ describe("eventCreator", () => {
   });
 
   it("should handle default actions and elements if none are provided", () => {
-    const params = {
+    const handlers = eventCreator({ callback: mockCallback });
+
+    expect(Object.keys(handlers)).toEqual([...eventElements]);
+    expect(Object.keys(handlers.button)).toEqual([...eventActions]);
+  });
+
+  it("should type the handlers from custom elements and actions", () => {
+    const handlers = eventCreator({
       callback: mockCallback,
-      options: {},
+      options: {
+        element: { possibleElements: ["tab"] },
+        action: { possibleActions: ["swipe"] },
+      },
+    });
+
+    handlers.tab.swipe();
+
+    // @ts-expect-error button is not one of the possible elements
+    expect(handlers.button).toBeUndefined();
+    expect(mockCallback).toHaveBeenCalledWith({
+      label: "tab swipe",
+      metadata: {},
+    });
+  });
+
+  it("should pass a typed event to the callback", () => {
+    const labels: string[] = [];
+    const handlers = eventCreator({
+      callback: (event) => labels.push(event.label),
+    });
+
+    handlers.button.click();
+
+    expect(labels).toEqual(["button click"]);
+  });
+
+  it("should not accept stringCase with camelCase or PascalCase", () => {
+    // checked by the type checker (npm run typecheck)
+    const options: EventCreatorOptions = {
+      // @ts-expect-error camelCase already defines the case of each word
+      labelOptions: { stringFormat: "camelCase", stringCase: "uppercase" },
     };
 
-    const handlers: EventHandler = eventCreator(params);
-
-    expect(Object.keys(handlers).length).toBeGreaterThan(0);
-    expect(
-      Object.keys(handlers[Object.keys(handlers)[0]]).length
-    ).toBeGreaterThan(0);
+    expect(options).toBeDefined();
   });
 
   it("should format the label correctly with stringFormat set to 'raw'", () => {
-    const params: EventCreatorParams = {
+    const params: typeof defaultParams = {
       ...defaultParams,
       options: {
         ...defaultParams.options,
@@ -114,7 +154,7 @@ describe("eventCreator", () => {
       },
     };
 
-    const handlers: EventHandler = eventCreator(params);
+    const handlers = eventCreator(params);
 
     const eventMetadata = { elementId: "456" };
     handlers.link.click(eventMetadata);
