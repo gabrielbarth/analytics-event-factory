@@ -44,5 +44,7 @@ export interface EventCreatorParams<
   Action extends string = DefaultEventAction,
 > {
   callback: (event: AnalyticsEvent) => unknown;
+  // called when building the event or running the callback fails
+  onError?: (error: unknown, event?: AnalyticsEvent) => void;
   options?: EventCreatorOptions<Element, Action>;
 }

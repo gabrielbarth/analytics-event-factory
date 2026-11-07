@@ -272,4 +272,80 @@ describe("eventCreator", () => {
       metadata: { page: "checkout" },
     });
   });
+
+  describe("errors", () => {
+    const error = new Error("SDK offline");
+    const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
+
+    it("should send callback errors to onError instead of throwing", () => {
+      const onError = jest.fn();
+      const handlers = eventCreator({
+        callback: () => {
+          throw error;
+        },
+        onError,
+      });
+
+      expect(() => handlers.button.click()).not.toThrow();
+      expect(onError).toHaveBeenCalledWith(error, {
+        label: "button click",
+        metadata: {},
+      });
+    });
+
+    it("should send rejected promises to onError", async () => {
+      const onError = jest.fn();
+      const handlers = eventCreator({
+        callback: () => Promise.reject(error),
+        onError,
+      });
+
+      handlers.button.click();
+      await flushPromises();
+
+      expect(onError).toHaveBeenCalledWith(error, {
+        label: "button click",
+        metadata: {},
+      });
+    });
+
+    it("should send errors from currentPage to onError without an event", () => {
+      const onError = jest.fn();
+      const handlers = eventCreator({
+        callback: mockCallback,
+        onError,
+        options: {
+          page: {
+            currentPage: () => {
+              throw error;
+            },
+          },
+        },
+      });
+
+      handlers.button.click();
+
+      expect(mockCallback).not.toHaveBeenCalled();
+      expect(onError).toHaveBeenCalledWith(error, undefined);
+    });
+
+    it("should log the error when onError is not given", () => {
+      const consoleError = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => undefined);
+      const handlers = eventCreator({
+        callback: () => {
+          throw error;
+        },
+      });
+
+      handlers.button.click();
+
+      expect(consoleError).toHaveBeenCalledWith(
+        "[analytics-event-factory] failed to send event:",
+        error
+      );
+      consoleError.mockRestore();
+    });
+  });
 });

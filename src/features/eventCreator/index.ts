@@ -1,3 +1,4 @@
+import { AnalyticsEvent } from "../../types/event/AnalyticsEvent";
 import { DefaultEventAction } from "../../types/event/EventAction";
 import { EventCreatorParams } from "../../types/event/EventCreatorParams";
 import { DefaultEventElement } from "../../types/event/EventElement";
@@ -7,12 +8,20 @@ import { eventActions as defaultEventActions } from "../../utils/constants/event
 import { eventElements as defaultEventElements } from "../../utils/constants/eventElements";
 import { formatLabel } from "../../utils/helpers/formatLabel";
 
+const reportError = (error: unknown): void => {
+  console.error("[analytics-event-factory] failed to send event:", error);
+};
+
+const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
+  typeof (value as PromiseLike<unknown> | undefined)?.then === "function";
+
 // function to create an object structure [element][action] and returns callback
 export function eventCreator<
   Element extends string = DefaultEventElement,
   Action extends string = DefaultEventAction,
 >({
   callback,
+  onError = reportError,
   options,
 }: EventCreatorParams<Element, Action>): EventHandler<Element, Action> {
   const handlers = {} as EventHandler<Element, Action>;
@@ -42,29 +51,41 @@ export function eventCreator<
     eventActions.forEach((action) => {
       // define an action handler that receives event metadata
       handlers[element][action] = (eventMetadata?: EventMetadata) => {
-        const page = getPage();
-        const elementId = showElementIdOnLabel
-          ? String(eventMetadata?.elementId ?? "")
-          : undefined;
+        let event: AnalyticsEvent | undefined;
 
-        callback({
-          label: formatLabel({
-            parts: [
-              showPageOnLabel ? page : undefined,
-              element,
-              action,
-              elementId,
-            ],
-            stringCase: labelOptions?.stringCase,
-            stringFormat: labelOptions?.stringFormat,
-          }),
-          metadata: {
-            ...eventMetadata,
-            ...(showPageOnMetadata && page ? { page: page } : {}),
-            ...(options?.element?.showOnMetadata ? { element: element } : {}),
-            ...(options?.action?.showOnMetadata ? { action: action } : {}),
-          },
-        });
+        // analytics must never break the screen that fired the event
+        try {
+          const page = getPage();
+          const elementId = showElementIdOnLabel
+            ? String(eventMetadata?.elementId ?? "")
+            : undefined;
+
+          event = {
+            label: formatLabel({
+              parts: [
+                showPageOnLabel ? page : undefined,
+                element,
+                action,
+                elementId,
+              ],
+              stringCase: labelOptions?.stringCase,
+              stringFormat: labelOptions?.stringFormat,
+            }),
+            metadata: {
+              ...eventMetadata,
+              ...(showPageOnMetadata && page ? { page: page } : {}),
+              ...(options?.element?.showOnMetadata ? { element: element } : {}),
+              ...(options?.action?.showOnMetadata ? { action: action } : {}),
+            },
+          };
+
+          const result = callback(event);
+          if (isPromiseLike(result)) {
+            result.then(undefined, (error) => onError(error, event));
+          }
+        } catch (error) {
+          onError(error, event);
+        }
       };
     });
   });
