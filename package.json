@@ -1,7 +1,7 @@
 {
   "name": "analytics-event-factory",
   "description": "Typed factory to standardize analytics event names and metadata",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
