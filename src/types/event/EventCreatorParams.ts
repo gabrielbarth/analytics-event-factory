@@ -24,7 +24,7 @@ export type EventCreatorOptions<
 > = {
   labelOptions?: LabelOptions;
   page?: {
-    currentPage?: string;
+    currentPage?: string | (() => string | undefined);
     showOnLabel?: boolean;
     showOnMetadata?: boolean;
   };

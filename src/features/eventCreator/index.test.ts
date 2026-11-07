@@ -244,4 +244,32 @@ describe("eventCreator", () => {
       metadata: { elementId: "btn-1" },
     });
   });
+
+  it("should read currentPage on every event when it is a function", () => {
+    let currentRoute = "home";
+    const handlers = eventCreator({
+      callback: mockCallback,
+      options: {
+        page: {
+          currentPage: () => currentRoute,
+          showOnLabel: true,
+          showOnMetadata: true,
+        },
+        labelOptions: { stringFormat: "snake_case" },
+      },
+    });
+
+    handlers.button.click();
+    currentRoute = "checkout";
+    handlers.button.click();
+
+    expect(mockCallback).toHaveBeenNthCalledWith(1, {
+      label: "home_button_click",
+      metadata: { page: "home" },
+    });
+    expect(mockCallback).toHaveBeenNthCalledWith(2, {
+      label: "checkout_button_click",
+      metadata: { page: "checkout" },
+    });
+  });
 });

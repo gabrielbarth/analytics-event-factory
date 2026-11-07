@@ -17,7 +17,13 @@ export function eventCreator<
 }: EventCreatorParams<Element, Action>): EventHandler<Element, Action> {
   const handlers = {} as EventHandler<Element, Action>;
 
-  const page = options?.page?.currentPage?.trim() || undefined;
+  // read the page on every event, so a function can follow navigation
+  const getPage = (): string | undefined => {
+    const currentPage = options?.page?.currentPage;
+    const page =
+      typeof currentPage === "function" ? currentPage() : currentPage;
+    return page?.trim() || undefined;
+  };
   const showPageOnLabel = options?.page?.showOnLabel;
   const showPageOnMetadata = options?.page?.showOnMetadata;
   const showElementIdOnLabel = options?.element?.showElementIdOnLabel;
@@ -36,6 +42,7 @@ export function eventCreator<
     eventActions.forEach((action) => {
       // define an action handler that receives event metadata
       handlers[element][action] = (eventMetadata?: EventMetadata) => {
+        const page = getPage();
         const elementId = showElementIdOnLabel
           ? String(eventMetadata?.elementId ?? "")
           : undefined;
